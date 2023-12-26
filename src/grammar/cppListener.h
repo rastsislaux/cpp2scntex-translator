@@ -592,6 +592,9 @@ public:
   virtual void enterLiteral(cpp::LiteralContext *ctx) = 0;
   virtual void exitLiteral(cpp::LiteralContext *ctx) = 0;
 
+  virtual void enterDocComment(cpp::DocCommentContext *ctx) = 0;
+  virtual void exitDocComment(cpp::DocCommentContext *ctx) = 0;
+
 
 };
 

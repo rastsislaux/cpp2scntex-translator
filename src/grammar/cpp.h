@@ -114,7 +114,7 @@ public:
     RuleHandler = 182, RuleExceptionDeclaration = 183, RuleThrowExpression = 184, 
     RuleExceptionSpecification = 185, RuleDynamicExceptionSpecification = 186, 
     RuleTypeIdList = 187, RuleNoeExceptSpecification = 188, RuleTheOperator = 189, 
-    RuleLiteral = 190
+    RuleLiteral = 190, RuleDocComment = 191
   };
 
   cpp(antlr4::TokenStream *input);
@@ -317,10 +317,13 @@ public:
   class TypeIdListContext;
   class NoeExceptSpecificationContext;
   class TheOperatorContext;
-  class LiteralContext; 
+  class LiteralContext;
+  class DocCommentContext; 
 
   class  TranslationUnitContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::DeclarationseqContext *ds = nullptr;;
     TranslationUnitContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *EOF();
@@ -1135,16 +1138,19 @@ public:
 
   class  StatementContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::DeclarationStatementContext *declstmt = nullptr;;
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     LabeledStatementContext *labeledStatement();
-    DeclarationStatementContext *declarationStatement();
     ExpressionStatementContext *expressionStatement();
     CompoundStatementContext *compoundStatement();
     SelectionStatementContext *selectionStatement();
     IterationStatementContext *iterationStatement();
     JumpStatementContext *jumpStatement();
     TryBlockContext *tryBlock();
+    DeclarationStatementContext *declarationStatement();
     AttributeSpecifierSeqContext *attributeSpecifierSeq();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -1189,6 +1195,9 @@ public:
 
   class  CompoundStatementContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::StatementSeqContext *stmtseq = nullptr;;
     CompoundStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *LeftBrace();
@@ -1204,6 +1213,9 @@ public:
 
   class  StatementSeqContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::StatementContext *stmt = nullptr;;
     StatementSeqContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<StatementContext *> statement();
@@ -1345,6 +1357,8 @@ public:
 
   class  DeclarationStatementContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::BlockDeclarationContext *decl = nullptr;;
     DeclarationStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     BlockDeclarationContext *blockDeclaration();
@@ -1358,6 +1372,9 @@ public:
 
   class  DeclarationseqContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::DeclarationContext *decl = nullptr;;
     DeclarationseqContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<DeclarationContext *> declaration();
@@ -1372,6 +1389,8 @@ public:
 
   class  DeclarationContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::BlockDeclarationContext *bd = nullptr;;
     DeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     BlockDeclarationContext *blockDeclaration();
@@ -1393,6 +1412,8 @@ public:
 
   class  BlockDeclarationContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::SimpleDeclarationContext *decl = nullptr;;
     BlockDeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     SimpleDeclarationContext *simpleDeclaration();
@@ -1431,12 +1452,19 @@ public:
 
   class  SimpleDeclarationContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::DocCommentContext *comment = nullptr;;
+    cpp::DeclSpecifierSeqContext *dsq = nullptr;;
+    cpp::InitDeclaratorListContext *idl = nullptr;;
     SimpleDeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *Semi();
-    DeclSpecifierSeqContext *declSpecifierSeq();
-    InitDeclaratorListContext *initDeclaratorList();
     AttributeSpecifierSeqContext *attributeSpecifierSeq();
+    InitDeclaratorListContext *initDeclaratorList();
+    DeclSpecifierSeqContext *declSpecifierSeq();
+    std::vector<DocCommentContext *> docComment();
+    DocCommentContext* docComment(size_t i);
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -1493,6 +1521,8 @@ public:
 
   class  DeclSpecifierContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::TypeSpecifierContext *ts = nullptr;;
     DeclSpecifierContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     StorageClassSpecifierContext *storageClassSpecifier();
@@ -1511,11 +1541,14 @@ public:
 
   class  DeclSpecifierSeqContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::DeclSpecifierContext *ds = nullptr;;
     DeclSpecifierSeqContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    AttributeSpecifierSeqContext *attributeSpecifierSeq();
     std::vector<DeclSpecifierContext *> declSpecifier();
     DeclSpecifierContext* declSpecifier(size_t i);
-    AttributeSpecifierSeqContext *attributeSpecifierSeq();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -1571,6 +1604,8 @@ public:
 
   class  TypeSpecifierContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::ClassSpecifierContext *cs = nullptr;;
     TypeSpecifierContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     TrailingTypeSpecifierContext *trailingTypeSpecifier();
@@ -2192,6 +2227,9 @@ public:
 
   class  InitDeclaratorListContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::InitDeclaratorContext *idecl = nullptr;;
     InitDeclaratorListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     std::vector<InitDeclaratorContext *> initDeclarator();
@@ -2208,6 +2246,8 @@ public:
 
   class  InitDeclaratorContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    cpp::DeclaratorContext *decl = nullptr;;
     InitDeclaratorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     DeclaratorContext *declarator();
@@ -2536,13 +2576,20 @@ public:
 
   class  FunctionDefinitionContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::DocCommentContext *comment = nullptr;;
+    cpp::DeclaratorContext *decl = nullptr;;
+    cpp::FunctionBodyContext *body = nullptr;;
     FunctionDefinitionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    DeclaratorContext *declarator();
-    FunctionBodyContext *functionBody();
     AttributeSpecifierSeqContext *attributeSpecifierSeq();
     DeclSpecifierSeqContext *declSpecifierSeq();
+    DeclaratorContext *declarator();
     VirtualSpecifierSeqContext *virtualSpecifierSeq();
+    FunctionBodyContext *functionBody();
+    std::vector<DocCommentContext *> docComment();
+    DocCommentContext* docComment(size_t i);
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -2553,15 +2600,18 @@ public:
 
   class  FunctionBodyContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::CompoundStatementContext *stmt = nullptr;;
     FunctionBodyContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    CompoundStatementContext *compoundStatement();
-    ConstructorInitializerContext *constructorInitializer();
     FunctionTryBlockContext *functionTryBlock();
     antlr4::tree::TerminalNode *Assign();
     antlr4::tree::TerminalNode *Semi();
     antlr4::tree::TerminalNode *Default();
     antlr4::tree::TerminalNode *Delete();
+    ConstructorInitializerContext *constructorInitializer();
+    CompoundStatementContext *compoundStatement();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -2665,6 +2715,9 @@ public:
 
   class  ClassSpecifierContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::MemberSpecificationContext *ms = nullptr;;
     ClassSpecifierContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     ClassHeadContext *classHead();
@@ -2740,14 +2793,17 @@ public:
 
   class  MemberSpecificationContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::MemberdeclarationContext *md = nullptr;;
     MemberSpecificationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    std::vector<MemberdeclarationContext *> memberdeclaration();
-    MemberdeclarationContext* memberdeclaration(size_t i);
     std::vector<AccessSpecifierContext *> accessSpecifier();
     AccessSpecifierContext* accessSpecifier(size_t i);
     std::vector<antlr4::tree::TerminalNode *> Colon();
     antlr4::tree::TerminalNode* Colon(size_t i);
+    std::vector<MemberdeclarationContext *> memberdeclaration();
+    MemberdeclarationContext* memberdeclaration(size_t i);
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -2758,18 +2814,21 @@ public:
 
   class  MemberdeclarationContext : public antlr4::ParserRuleContext {
   public:
+    std::string resultDocText;
+    std::stringstream resultDocStream;
+    cpp::FunctionDefinitionContext *fd = nullptr;;
     MemberdeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *Semi();
-    AttributeSpecifierSeqContext *attributeSpecifierSeq();
-    DeclSpecifierSeqContext *declSpecifierSeq();
-    MemberDeclaratorListContext *memberDeclaratorList();
-    FunctionDefinitionContext *functionDefinition();
     UsingDeclarationContext *usingDeclaration();
     StaticAssertDeclarationContext *staticAssertDeclaration();
     TemplateDeclarationContext *templateDeclaration();
     AliasDeclarationContext *aliasDeclaration();
     EmptyDeclaration_Context *emptyDeclaration_();
+    AttributeSpecifierSeqContext *attributeSpecifierSeq();
+    DeclSpecifierSeqContext *declSpecifierSeq();
+    MemberDeclaratorListContext *memberDeclaratorList();
+    FunctionDefinitionContext *functionDefinition();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -3507,6 +3566,22 @@ public:
   };
 
   LiteralContext* literal();
+
+  class  DocCommentContext : public antlr4::ParserRuleContext {
+  public:
+    std::string commentText;
+    antlr4::Token *comment = nullptr;;
+    DocCommentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *DocLineComment();
+    antlr4::tree::TerminalNode *DocBlockComment();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  DocCommentContext* docComment();
 
 
   virtual bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;

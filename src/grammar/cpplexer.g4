@@ -8,10 +8,6 @@ options {
     language = Cpp;
 }
 
-channels {
-    DOC_COMMENTS
-}
-
 IntegerLiteral:
     DecimalLiteral Integersuffix?
     | OctalLiteral Integersuffix?
@@ -401,9 +397,9 @@ Whitespace: [ \t]+ -> skip;
 
 Newline: ('\r' '\n'? | '\n') -> skip;
 
-DocBlockComment: '/*!' .*? '*/' -> channel(DOC_COMMENTS);
+DocBlockComment: '/*!' .*? '*/';
 
-DocLineComment: '//!' ~ [\r\n]* -> channel(DOC_COMMENTS);
+DocLineComment: '//!' ~ [\r\n]*;
 
 BlockComment: '/*' .*? '*/' -> skip;
 

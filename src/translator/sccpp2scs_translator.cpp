@@ -1,5 +1,6 @@
 #include "sccpp2scs_translator.h"
 
+#include "../grammar/cppBaseListener.h"
 #include "log/sc_log.hpp"
 #include "helper/scs_helper.h"
 #include "identifiers-tree/sc_scn_prefix_tree.h"
@@ -128,28 +129,13 @@ std::string Cpp2ScsTranslator::TranslateText(std::string const & filePath)
     antlr4::ANTLRInputStream input(file);
     cpplexer lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
-    tokens.fill();
 
-    std::stringstream ss;
-    for (auto token : tokens.getTokens())
-    {
-        if (token->getChannel() != cpplexer::DOC_COMMENTS)
-        {
-            continue;
-        }
+    cpp parser(&tokens);
 
-        auto text = token->getText();
-        if (token->getType() == cpplexer::DocLineComment)
-        {
-            ss << text.substr(3);
-        }
-        else
-        {
-            ss << token->getText().substr(3, text.length() - 5);
-        }
-    }
+    SCsHelper::SetCurrentFile(filePath);
+    file.close();
 
-    return ss.str();
+    return parser.translationUnit()->resultDocText;
 }
 
 void Cpp2ScsTranslator::DumpIdentifiers(ScDirectory const & targetDirectory)

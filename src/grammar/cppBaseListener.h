@@ -594,6 +594,9 @@ public:
   virtual void enterLiteral(cpp::LiteralContext * /*ctx*/) override { }
   virtual void exitLiteral(cpp::LiteralContext * /*ctx*/) override { }
 
+  virtual void enterDocComment(cpp::DocCommentContext * /*ctx*/) override { }
+  virtual void exitDocComment(cpp::DocCommentContext * /*ctx*/) override { }
+
 
   virtual void enterEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }
   virtual void exitEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }

@@ -42,8 +42,11 @@ options {
 /*Basic concepts*/
 
 translationUnit
+    returns [std::string resultDocText]
     :
-    declarationseq?
+    (ds=declarationseq {
+        $resultDocText = $ds.resultDocText;
+    })?
     EOF
     ;
 
@@ -296,16 +299,26 @@ constantExpression
 /*Statements*/
 
 statement
-    : labeledStatement
-    | declarationStatement
-    | attributeSpecifierSeq? (
-        expressionStatement
-        | compoundStatement
-        | selectionStatement
-        | iterationStatement
-        | jumpStatement
-        | tryBlock
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    :
+    (
+        labeledStatement
+        | (declstmt=declarationStatement {
+            $resultDocStream << $declstmt.resultDocText;
+          })
+        | attributeSpecifierSeq? (
+            expressionStatement
+            | compoundStatement
+            | selectionStatement
+            | iterationStatement
+            | jumpStatement
+            | tryBlock
+        )
     )
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 labeledStatement
@@ -317,11 +330,25 @@ expressionStatement
     ;
 
 compoundStatement
-    : LeftBrace statementSeq? RightBrace
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : LeftBrace (stmtseq=statementSeq {
+        $resultDocStream << $stmtseq.resultDocText;
+    })? RightBrace
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 statementSeq
-    : statement+
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : (stmt=statement {
+        $resultDocStream << $stmt.resultDocText;
+    })+
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 selectionStatement
@@ -365,18 +392,31 @@ jumpStatement
     ;
 
 declarationStatement
-    : blockDeclaration
+    returns [std::string resultDocText]
+    : (decl=blockDeclaration {
+        $resultDocText = $decl.resultDocText;
+    })
     ;
 
 /*Declarations*/
 
 declarationseq
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
     :
-    declaration+
+    (decl=declaration {
+        $resultDocStream << $decl.resultDocText;
+    })+
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 declaration
-    : blockDeclaration
+    returns [std::string resultDocText]
+    : (bd=blockDeclaration {
+        $resultDocText = $bd.resultDocText;
+    })
     | functionDefinition
     | templateDeclaration
     | explicitInstantiation
@@ -388,7 +428,10 @@ declaration
     ;
 
 blockDeclaration
-    : simpleDeclaration
+    returns [std::string resultDocText]
+    : (decl=simpleDeclaration {
+        $resultDocText = $decl.resultDocText;
+    })
     | asmDefinition
     | namespaceAliasDefinition
     | usingDeclaration
@@ -403,8 +446,25 @@ aliasDeclaration
     ;
 
 simpleDeclaration
-    : declSpecifierSeq? initDeclaratorList? Semi
-    | attributeSpecifierSeq declSpecifierSeq? initDeclaratorList Semi
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : (
+        (comment=docComment {
+            $resultDocStream << $comment.commentText;
+        })*
+        (dsq=declSpecifierSeq {
+            $resultDocStream << $dsq.resultDocText;
+        })? (idl=initDeclaratorList {
+            $resultDocStream << $idl.resultDocText;
+        })? Semi
+        (comment=docComment {
+            $resultDocStream << $comment.commentText;
+        })*
+        | attributeSpecifierSeq declSpecifierSeq? initDeclaratorList Semi
+    )
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 staticAssertDeclaration
@@ -420,8 +480,11 @@ attributeDeclaration
     ;
 
 declSpecifier
+    returns [std::string resultDocText]
     : storageClassSpecifier
-    | typeSpecifier
+    | (ts=typeSpecifier {
+        $resultDocText = $ts.resultDocText;
+    })
     | functionSpecifier
     | Friend
     | Typedef
@@ -429,7 +492,14 @@ declSpecifier
     ;
 
 declSpecifierSeq
-    : declSpecifier+? attributeSpecifierSeq?
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : (ds=declSpecifier {
+        $resultDocStream << $ds.resultDocText;
+    })+? attributeSpecifierSeq?
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 storageClassSpecifier
@@ -451,8 +521,11 @@ typedefName
     ;
 
 typeSpecifier
+    returns [std::string resultDocText]
     : trailingTypeSpecifier
-    | classSpecifier
+    | (cs=classSpecifier {
+        $resultDocText = $cs.resultDocText;
+    })
     | enumSpecifier
     ;
 
@@ -642,11 +715,23 @@ balancedtoken
 /*Declarators*/
 
 initDeclaratorList
-    : initDeclarator (Comma initDeclarator)*
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : (idecl=initDeclarator {
+        $resultDocStream << $idecl.resultDocText;
+    }) (Comma (idecl=initDeclarator {
+                      $resultDocStream << $idecl.resultDocText;
+                  }))*
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 initDeclarator
-    : declarator initializer?
+    returns [std::string resultDocText]
+    : (decl=declarator {
+        $resultDocText = "\n\\scnidtf{" + $decl.text + "}\n";
+    }) initializer?
     ;
 
 declarator
@@ -750,13 +835,49 @@ parameterDeclaration
     ;
 
 functionDefinition
-    : attributeSpecifierSeq? declSpecifierSeq? declarator virtualSpecifierSeq? functionBody
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    :
+    (comment=docComment {
+        $resultDocStream << $comment.commentText;
+    })*
+    attributeSpecifierSeq? declSpecifierSeq? (decl=declarator {
+        size_t bracketPos = $decl.text.find('(');
+
+        std::string methodName;
+        if (bracketPos != std::string::npos) {
+            methodName = $decl.text.substr(0, bracketPos);
+        } else {
+            methodName = $decl.text;
+        }
+
+        $resultDocStream << "\n\\scnidtf{" + methodName + "}\n";
+    }) virtualSpecifierSeq?
+    (comment=docComment {
+        $resultDocStream << $comment.commentText;
+    })*
+    (body=functionBody {
+        $resultDocStream << $body.resultDocText;
+    })
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 functionBody
-    : constructorInitializer? compoundStatement
-    | functionTryBlock
-    | Assign (Default | Delete) Semi
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    :
+    (
+        constructorInitializer? (stmt=compoundStatement {
+            $resultDocStream << $stmt.resultDocText;
+        })
+        | functionTryBlock
+        | Assign (Default | Delete) Semi
+    )
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 initializer
@@ -790,7 +911,14 @@ className
     ;
 
 classSpecifier
-    : classHead LeftBrace memberSpecification? RightBrace
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : classHead LeftBrace (ms=memberSpecification {
+        $resultDocStream << $ms.resultDocText;
+    })? RightBrace
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 classHead
@@ -812,17 +940,34 @@ classKey
     ;
 
 memberSpecification
-    : (memberdeclaration | accessSpecifier Colon)+
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    : ((md=memberdeclaration {
+        $resultDocStream << $md.resultDocText;
+    }) | accessSpecifier Colon)+
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 memberdeclaration
-    : /*docComment?*/ attributeSpecifierSeq? declSpecifierSeq? memberDeclaratorList? Semi /*docComment?*/
-    | functionDefinition
-    | usingDeclaration
-    | staticAssertDeclaration
-    | templateDeclaration
-    | aliasDeclaration
-    | emptyDeclaration_
+    returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
+    :
+    (
+        attributeSpecifierSeq? declSpecifierSeq? memberDeclaratorList? Semi
+        | (fd=functionDefinition {
+            $resultDocStream << $fd.resultDocText;
+        })
+        | usingDeclaration
+        | staticAssertDeclaration
+        | templateDeclaration
+        | aliasDeclaration
+        | emptyDeclaration_
+    )
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 memberDeclaratorList
@@ -1089,7 +1234,13 @@ literal
     | UserDefinedLiteral
     ;
 
-// docComment
-//     : DocLineComment
-//     | DocBlockComment
-//     ;
+ docComment
+     returns [std::string commentText]
+     : (comment=DocLineComment {
+        $commentText = $comment.text.substr(3);
+     })
+     | (comment=DocBlockComment {
+        $commentText = $comment.text;
+        $commentText = $commentText.substr(3, $commentText.length() - 5);
+     })
+     ;

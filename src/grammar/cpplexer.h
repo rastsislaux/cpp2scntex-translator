@@ -44,10 +44,6 @@ public:
     BlockComment = 146, LineComment = 147
   };
 
-  enum {
-    DOC_COMMENTS = 2
-  };
-
   cpplexer(antlr4::CharStream *input);
   ~cpplexer();
 
