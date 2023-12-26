@@ -1,0 +1,112 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "thirdparty/antlr/runtime",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-thirdparty.antlr.runtime-Debug-c345c1943bb7fb3e1af6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "thirdparty/antlr/runtime",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				},
+				{
+					"build" : "src",
+					"jsonFile" : "directory-src-Debug-b6cf2213fc5053b67c22.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.8"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src",
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2
+					],
+					"name" : "sc-scn-tex2scs-translator",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 1,
+					"id" : "antlr4_static::@6173ee702506aae6f9f1",
+					"jsonFile" : "target-antlr4_static-Debug-ef46a82db53824ada731.json",
+					"name" : "antlr4_static",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "make_lib_output_dir::@6173ee702506aae6f9f1",
+					"jsonFile" : "target-make_lib_output_dir-Debug-c5ca3d0741724cb129f4.json",
+					"name" : "make_lib_output_dir",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "scn-tex2scs::@145eef247bfb46b6828c",
+					"jsonFile" : "target-scn-tex2scs-Debug-276774be0fd3ed513962.json",
+					"name" : "scn-tex2scs",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/rlipski/opt/cpp2scs-translator",
+		"source" : "/home/rlipski/opt/cpp2scs-translator"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}
