@@ -1,4 +1,4 @@
-# Tex2SCs-translator
+# Cpp2SCnTex-translator
 
 Cpp2SCnTex-translator is a tool for translating *.cpp files with documentation in SCnTeX into SCn-represented *.tex files.
 
