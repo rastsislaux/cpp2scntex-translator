@@ -30,13 +30,6 @@ options {
     language = Cpp;
 }
 
-@parser::header
-{
-#include "../translator/identifiers-tree/sc_scn_prefix_tree.h"
-#include "../translator/file-structs/sc_scn_file_structs_tree.h"
-#include "../translator/log/sc_log.hpp"
-}
-
 // Insert here @header for C++ parser.
 
 /*Basic concepts*/
@@ -729,9 +722,24 @@ initDeclaratorList
 
 initDeclarator
     returns [std::string resultDocText]
+    locals [std::stringstream resultDocStream]
     : (decl=declarator {
-        $resultDocText = "\n\\scnidtf{" + $decl.text + "}\n";
+        $resultDocStream << "\n\\scnidtf{" << $decl.text << "}\n";
+
+        auto parent = _localctx->decl->parent;
+        while (parent != nullptr && !dynamic_cast<FunctionDefinitionContext *>(parent)) {
+          parent = parent->parent;
+        }
+        std::string methodName;
+        if (parent != nullptr) {
+            methodName = dynamic_cast<FunctionDefinitionContext *>(parent)->methodName;
+        }
+
+        $resultDocStream << "\\scniselement{" << methodName << "}\n";
     }) initializer?
+    {
+        $resultDocText = $resultDocStream.str();
+    }
     ;
 
 declarator
@@ -836,7 +844,10 @@ parameterDeclaration
 
 functionDefinition
     returns [std::string resultDocText]
-    locals [std::stringstream resultDocStream]
+    locals [
+        std::stringstream resultDocStream,
+        std::string methodName
+    ]
     :
     (comment=docComment {
         $resultDocStream << $comment.commentText;
@@ -844,14 +855,13 @@ functionDefinition
     attributeSpecifierSeq? declSpecifierSeq? (decl=declarator {
         size_t bracketPos = $decl.text.find('(');
 
-        std::string methodName;
         if (bracketPos != std::string::npos) {
-            methodName = $decl.text.substr(0, bracketPos);
+            $methodName = $decl.text.substr(0, bracketPos);
         } else {
-            methodName = $decl.text;
+            $methodName = $decl.text;
         }
 
-        $resultDocStream << "\n\\scnidtf{" + methodName + "}\n";
+        $resultDocStream << "\n\\scnidtf{" + $methodName + "}\n";
     }) virtualSpecifierSeq?
     (comment=docComment {
         $resultDocStream << $comment.commentText;

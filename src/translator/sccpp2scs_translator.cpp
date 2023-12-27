@@ -1,13 +1,10 @@
 #include "sccpp2scs_translator.h"
 
-#include "../grammar/cppBaseListener.h"
 #include "log/sc_log.hpp"
-#include "helper/scs_helper.h"
-#include "identifiers-tree/sc_scn_prefix_tree.h"
 #include "file-structs/sc_scn_file_structs_tree.h"
+#include "stream/scs_stream.h"
 
 Cpp2ScsTranslator::Cpp2ScsTranslator(bool debugMode, bool clearMode)
-/* sdfsdfsdf */
 {
     m_debugMode = debugMode;
     m_clearMode = clearMode;
@@ -37,10 +34,6 @@ bool Cpp2ScsTranslator::Run(
         SC_LOG_INFO("Set release mode");
     }
 
-    ScSCnPrefixTree::GetInstance()->SetNewElementNumber(elementSysId);
-    SC_LOG_WARNING("First element system identifier: "
-        << ScSCnPrefixTree::GetInstance()->GetFreeElementSystemIdentifier());
-
     ScDirectory const & workDirectory { workDirectoryPath };
     m_filesCount = workDirectory.CountFiles(m_extensions);
 
@@ -58,11 +51,8 @@ bool Cpp2ScsTranslator::Run(
     }
 
     TranslateFiles(startDirectoryPath, workDirectory, targetDirectory);
-    DumpIdentifiers(targetDirectory);
     DumpFileStructs(targetDirectory);
 
-    SC_LOG_WARNING("Free element system identifier: "
-        << ScSCnPrefixTree::GetInstance()->GetFreeElementSystemIdentifier());
     SC_LOG_INFO("Translation finished.");
 
     return true;
@@ -108,9 +98,9 @@ bool Cpp2ScsTranslator::TranslateFile(
 {
     ScFile targetFile = targetDirectory.CopyFile(file, ".tex");
 
-    std::string scsText;
+    std::string scnText;
     try {
-        scsText = TranslateText(file.GetPath());
+        scnText = TranslateText(file.GetPath());
     }
     catch (std::exception const & e)
     {
@@ -119,7 +109,7 @@ bool Cpp2ScsTranslator::TranslateFile(
         return false;
     }
 
-    targetFile.Write(scsText);
+    targetFile.Write(scnText);
     return true;
 }
 
@@ -129,23 +119,10 @@ std::string Cpp2ScsTranslator::TranslateText(std::string const & filePath)
     antlr4::ANTLRInputStream input(file);
     cpplexer lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
-
     cpp parser(&tokens);
-
-    SCsHelper::SetCurrentFile(filePath);
     file.close();
 
     return parser.translationUnit()->resultDocText;
-}
-
-void Cpp2ScsTranslator::DumpIdentifiers(ScDirectory const & targetDirectory)
-{
-  std::string const targetDirPath = targetDirectory.GetPath();
-  ScFile dumpFile = (targetDirPath.at(targetDirPath.size() - 1) == '/'
-    ? targetDirPath : targetDirPath + "/") + "identifiers.tex";
-
-  std::string const scsText = ScSCnPrefixTree::GetInstance()->Dump();
-  dumpFile.Write(scsText);
 }
 
 void Cpp2ScsTranslator::DumpFileStructs(ScDirectory const & targetDirectory)
